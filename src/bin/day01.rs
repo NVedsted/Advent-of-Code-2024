@@ -33,8 +33,6 @@ fn solver(input: &str) -> (usize, usize) {
     left_list.sort();
     right_list.sort();
 
-    assert_eq!(left_list.len(), right_list.len());
-
     let part1 = left_list
         .iter()
         .zip(right_list.iter())
@@ -62,10 +60,8 @@ mod tests {
 3   9
 3   3";
 
-    const EXAMPLE_OUTPUT: (Option<&str>, Option<&str>) = (Some("11"), Some("31"));
-
     #[test]
     fn test() {
-        aoc2024::test_day(super::solver, EXAMPLE_INPUT, EXAMPLE_OUTPUT);
+        aoc2024::test_day(super::solver, EXAMPLE_INPUT, (11, Some(31)));
     }
 }

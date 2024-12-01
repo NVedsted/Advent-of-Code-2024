@@ -41,3 +41,9 @@ pub fn get_day_output(day: usize) -> (Option<String>, Option<String>) {
 
     (lines.next(), lines.next())
 }
+
+pub fn set_day_output(day: usize, output1: &str, output2: &str) {
+    println!("Saving output as expected output");
+    let file_name = format!("data/{day:02}.out");
+    std::fs::write(file_name, format!("{output1}\n{output2}")).unwrap();
+}

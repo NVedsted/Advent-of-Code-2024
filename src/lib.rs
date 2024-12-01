@@ -3,35 +3,50 @@ mod answers;
 mod data;
 pub mod parsing;
 
-use std::process::Termination;
+use std::fmt::{Debug, Display};
+use std::process::{ExitCode, Termination};
 use std::time::Instant;
 
 pub fn execute_day<F, A1, A2>(day: usize, solver: F) -> impl Termination
 where
     F: FnOnce(&str) -> (A1, A2),
-    A1: ToString,
-    A2: ToString,
+    A1: Display,
+    A2: Display,
 {
     let input = data::get_day_input(day);
     let start = Instant::now();
     let answers = solver(&input);
     let elapsed = start.elapsed();
 
-    let answers = (answers.0.to_string(), answers.1.to_string());
+    let answers = (answers.0, answers.1);
 
-    let (answer1, answer2) = answers::validate_day_answers(day, answers);
+    let (answer1, answer2) = answers::validate_answers(day, answers);
 
     println!("{}", answer1);
     println!("{}", answer2);
     println!("Runtime: {elapsed:?}");
+
+    if std::env::args().any(|a| a == "--save-output") {
+        data::set_day_output(day, &answer1.value, &answer2.value);
+    }
+
+    if answer1.is_incorrect() || answer2.is_incorrect() {
+        ExitCode::FAILURE
+    } else {
+        ExitCode::SUCCESS
+    }
 }
 
-pub fn test_day<F: FnOnce(&str) -> (T1, T2), T1: ToString, T2: ToString>(
-    solver: F,
-    input: &str,
-    expected: (Option<&str>, Option<&str>),
-) {
-    let (answer1, answer2) = answers::validate_answers(solver(input), expected);
-    assert!(!answer1.is_incorrect(), "Part 1 failed");
-    assert!(!answer2.is_incorrect(), "Part 2 failed");
+pub fn test_day<F, T1, T2>(solver: F, input: &str, (expected1, expected2): (T1, Option<T2>))
+where
+    F: FnOnce(&str) -> (T1, T2),
+    T1: PartialEq + Debug,
+    T2: PartialEq + Debug,
+{
+    let (answer1, answer2) = solver(input);
+    assert_eq!(answer1, expected1, "Part 1 failed");
+
+    if let Some(expected2) = expected2 {
+        assert_eq!(answer2, expected2, "Part 1 failed");
+    }
 }
