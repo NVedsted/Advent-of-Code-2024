@@ -1,3 +1,4 @@
+use crate::ReportBehavior::{Decreasing, Either, Increasing};
 use std::process::Termination;
 use std::str::FromStr;
 
@@ -21,19 +22,60 @@ fn solver(input: &str) -> (usize, usize) {
 }
 
 fn is_safe(report: &Report) -> bool {
-    let values = &report.0;
+    find_behavior(&report.0).is_some()
+}
 
-    if values.len() < 2 {
-        return true;
+#[derive(Eq, PartialEq, Copy, Clone, Debug)]
+enum ReportBehavior {
+    Increasing,
+    Decreasing,
+    Either,
+}
+
+impl ReportBehavior {
+    fn from_pair(left: usize, right: usize) -> Self {
+        if right > left {
+            Increasing
+        } else if right == left {
+            Either
+        } else {
+            Decreasing
+        }
+    }
+    fn intersection(self, other: Self) -> Option<Self> {
+        match (self, other) {
+            (l, r) if l == r => Some(l),
+            (v, Either) | (Either, v) => Some(v),
+            _ => None,
+        }
     }
 
-    let increasing = values[1] > values[0];
+    fn validate_pair(self, left: usize, right: usize) -> bool {
+        left != right
+            && left.abs_diff(right) <= 3
+            && match self {
+                Increasing => right > left,
+                Decreasing => right < left,
+                Either => true,
+            }
+    }
+}
 
-    values.windows(2).all(|v| {
-        v[0] != v[1]
-            && v[0].abs_diff(v[1]) <= 3
-            && if increasing { v[1] > v[0] } else { v[1] < v[0] }
-    })
+fn find_behavior(values: &[usize]) -> Option<ReportBehavior> {
+    if values.len() < 2 {
+        return Some(Either);
+    }
+
+    let initial_behavior = ReportBehavior::from_pair(values[0], values[1]);
+
+    if values
+        .windows(2)
+        .all(|v| initial_behavior.validate_pair(v[0], v[1]))
+    {
+        Some(initial_behavior)
+    } else {
+        None
+    }
 }
 
 fn is_safe_dampened(report: &Report) -> bool {
@@ -41,13 +83,28 @@ fn is_safe_dampened(report: &Report) -> bool {
         return true;
     }
 
-    let mut new_report = Report(Vec::with_capacity(report.0.len() - 1));
+    let values = report.0.as_slice();
 
     (0..report.0.len()).any(|i| {
-        new_report.0.clear();
-        new_report.0.extend(&report.0[..i]);
-        new_report.0.extend(&report.0[i + 1..]);
-        is_safe(&new_report)
+        let (left, right) = {
+            let s = values.split_at(i);
+            (s.0, &s.1[1..])
+        };
+
+        let (Some(left_behavior), Some(right_behavior)) =
+            (find_behavior(left), find_behavior(right))
+        else {
+            return false;
+        };
+
+        let Some(common_behavior) = left_behavior.intersection(right_behavior) else {
+            return false;
+        };
+
+        match (left.last(), right.first()) {
+            (None, _) | (_, None) => true,
+            (Some(&a), Some(&b)) => common_behavior.validate_pair(a, b),
+        }
     })
 }
 
