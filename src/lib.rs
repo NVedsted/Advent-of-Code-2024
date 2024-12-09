@@ -47,6 +47,6 @@ where
     assert_eq!(answer1, expected1, "Part 1 failed");
 
     if let Some(expected2) = expected2 {
-        assert_eq!(answer2, expected2, "Part 1 failed");
+        assert_eq!(answer2, expected2, "Part 2 failed");
     }
 }
