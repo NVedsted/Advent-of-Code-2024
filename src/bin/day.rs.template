@@ -1,0 +1,21 @@
+use std::process::Termination;
+
+fn solver(input: &str) -> (usize, usize) {
+    (0, 0)
+}
+
+fn main() -> impl Termination {
+    aoc2024::execute_day(N, solver)
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::solver;
+
+    const EXAMPLE_INPUT: &str = "";
+
+    #[test]
+    fn test_day() {
+        aoc2024::test_day(solver, EXAMPLE_INPUT, (0, None));
+    }
+}
